@@ -204,8 +204,12 @@
     </div>
 
     <script>
-        // Calendar starts empty - add your own sessions
-        let events = [];
+        // Load saved sessions from this browser, or start empty
+        let events = JSON.parse(localStorage.getItem('tutorScheduleEvents') || '[]');
+
+        function saveEvents() {
+            localStorage.setItem('tutorScheduleEvents', JSON.stringify(events));
+        }
 
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         let currentDate = new Date(2026, 6, 6); // July 6, 2026
@@ -341,6 +345,7 @@
             events = events.filter(e => e.id !== window.currentEditingId);
             delete window.currentEditingId;
             
+            saveEvents();
             closeModal();
             renderCalendar();
         }
@@ -382,6 +387,7 @@
                 events.push(newEvent);
             }
             
+            saveEvents();
             closeModal();
             renderCalendar();
         }
