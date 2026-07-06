@@ -3,255 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>forgive me please 🥺 </title>
+    <title>Tutor Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * {
-            box-sizing: border-box;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        :root {
+            --pink-50: #fdf2f8;
+            --pink-100: #fce7f3;
+            --pink-500: #ec4899;
         }
-
+        
         body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            background-color: #ffc0cb; /* Pink background */
-            background-image: radial-gradient(circle, #ffc0cb 0%, #ffb6c1 100%);
-            font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .time-label {
+            background: white;
+            text-align: right;
+            padding-right: 12px;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .day-header {
+            background: white;
             text-align: center;
-            position: relative;
+            padding: 12px 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-bottom: 2px solid #ec4899;
         }
-
-        .container {
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #d32f2f;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            line-height: 1.2;
-            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
-        }
-
-        .question {
-            color: #e91e63;
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-
-        .buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-        }
-
-        button {
-            border: none;
-            border-radius: 50px;
+        
+        .calendar-cell {
+            background: white;
+            min-height: 60px;
+            padding: 4px;
             cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s;
+            position: relative;
+            border-top: 1px solid #f3e8ff;
         }
-
-        #yesBtn {
-            background-color: #4CAF50;
-            color: white;
-            font-size: 1.2rem;
-            padding: 12px 30px;
-            font-weight: bold;
-            z-index: 20;
+        
+        .calendar-cell:hover {
+            background: #fdf2f8;
         }
-
-        #yesBtn:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
+        
+        .event {
+            background: #fce7f3;
+            border-left: 4px solid #ec4899;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-
-        #noBtn {
-            background-color: #f44336;
-            color: white;
-            font-size: 1.2rem;
-            padding: 12px 30px;
-            font-weight: bold;
+        
+        .modal {
+            animation: modalPop 0.3s ease;
         }
-
-        #noBtn:active {
-            transform: scale(0.95);
-        }
-
-        /* Success Screen */
-        .success-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .emoji-bear {
-            font-size: 5rem;
-            margin-bottom: 20px;
-        }
-
-        .success-text {
-            font-size: 2rem;
-            color: #d32f2f;
-            font-weight: bold;
-        }
-
-        /* Background Hearts Animation */
-        .bg-heart {
-            position: absolute;
-            color: #fff;
-            opacity: 0.3;
-            top: -10%;
-            animation: fall linear infinite;
-            z-index: 1;
-            user-select: none;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(360deg); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
+        
+        @keyframes modalPop {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
-<body>
+<body class="bg-pink-50 min-h-screen">
+    <div class="max-w-7xl mx-auto p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">📅</div>
+                <div>
+                    <h1 class="text-3xl font-semibold text-pink-950">Tutor Schedule</h1>
+                    <p class="text-pink-600 text-sm">July 2026</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-white rounded-2xl shadow-sm px-4 py-2 gap-2 text-sm">
+                    <button onclick="prevWeek()" class="hover:bg-pink-100 w-8 h-8 rounded-xl flex items-center justify-center text-pink-600">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div id="current-week" class="font-medium px-4 py-1 text-pink-800 whitespace-nowrap">
+                        Jul 06 - Jul 12, 2026
+                    </div>
+                    <button onclick="nextWeek()" class="hover:bg-pink-100 w-8 h-8 rounded-xl flex items-center justify-center text-pink-600">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <button onclick="addNewEvent()" 
+                        class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-medium shadow-lg shadow-pink-300 transition-all active:scale-95">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Session</span>
+                </button>
+            </div>
+        </div>
 
-    <!-- Falling hearts background -->
-    <div id="heartsContainer"></div>
+        <!-- Calendar -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-100">
+            <!-- Day Headers -->
+            <div class="grid grid-cols-7 border-b border-pink-100" id="day-headers">
+                <!-- Populated by JS -->
+            </div>
+            
+            <!-- Calendar Body -->
+            <div class="calendar-grid" id="calendar-body">
+                <!-- Populated by JS -->
+            </div>
+        </div>
 
-    <!-- Main Question Screen -->
-    <div class="container" id="mainScreen">
-        <h1> please i'm sorry im bag forgive me  My Beautiful Mafe 😭 </h1>
-        <div class="question">Do you forgive me?</div>
-        
-        <div class="buttons">
-            <button id="yesBtn">YES</button>
-            <button id="noBtn">NO</button>
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center justify-between gap-6 mt-6 text-sm">
+            <div class="flex flex-wrap gap-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-pink-300 rounded"></div>
+                    <span class="text-pink-700">Math Session</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                    <span class="text-pink-700">Needs attention</span>
+                </div>
+            </div>
+            <div class="text-right text-pink-400 text-xs">
+                &copy; Teacher Ma.Fe
+            </div>
         </div>
     </div>
 
-    <!-- Success Screen -->
-    <div class="container success-container" id="successScreen">
-        <!-- Changed sticker to Bear + Man/Woman Kissing -->
-        <div class="emoji-bear">🧸 👩‍❤️‍💋‍👨</div>
-        <div class="success-text">Yay! thank you I love you</div>
-        <div style="font-size: 1.2rem; margin-top: 15px; color: #e91e63;">Happy Valentine's Day!</div>
+    <!-- Add/Edit Event Modal -->
+    <div id="event-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div class="modal bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-8 py-6 border-b flex items-center justify-between bg-pink-50">
+                <h3 id="modal-title" class="text-xl font-semibold text-pink-950">New Tutoring Session</h3>
+                <button onclick="closeModal()" class="text-pink-400 hover:text-pink-600 text-2xl leading-none">×</button>
+            </div>
+            
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="block text-pink-700 text-sm mb-1.5 font-medium">Student Name</label>
+                    <input id="event-student" type="text" 
+                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-pink-700 text-sm mb-1.5 font-medium">Day</label>
+                        <select id="event-day" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-pink-700 text-sm mb-1.5 font-medium">Time</label>
+                        <div class="flex gap-2">
+                            <input id="event-time" type="time" 
+                                   class="flex-1 border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-pink-700 text-sm mb-1.5 font-medium">Subject</label>
+                    <input id="event-subject" type="text" value="Math" 
+                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                </div>
+                
+                <div>
+                    <label class="block text-pink-700 text-sm mb-1.5 font-medium">Grade</label>
+                    <input id="event-grade" type="text" placeholder="e.g. Grade K7" 
+                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button id="delete-btn" onclick="deleteEvent()" 
+                            class="hidden px-5 py-4 text-red-500 font-medium border border-red-200 hover:bg-red-50 rounded-2xl transition-colors">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button onclick="closeModal()" 
+                            class="flex-1 py-4 text-pink-600 font-medium border border-pink-200 hover:bg-pink-50 rounded-2xl transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveEvent()" 
+                            class="flex-1 py-4 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-2xl transition-all">
+                        Save Session
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const yesBtn = document.getElementById('yesBtn');
-        const noBtn = document.getElementById('noBtn');
-        const mainScreen = document.getElementById('mainScreen');
-        const successScreen = document.getElementById('successScreen');
-        const body = document.body;
+        // Calendar starts empty - add your own sessions
+        let events = [];
 
-        let yesScale = 1;
-        const phrases = [
-            "NO", 
-            "Are you sure?", 
-            "Really?", 
-            "Think again!", 
-            "Last chance!", 
-            "Don't do this!", 
-            "PLEASE 🥺", 
-            "You are breaking my heart 💔",
-            "I'm gonna cry 😭"
-        ];
-        let phraseIndex = 0;
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        let currentDate = new Date(2026, 6, 6); // July 6, 2026
 
-        // Interaction logic
-        noBtn.addEventListener('click', function() {
-            // Make YES button bigger
-            yesScale += 0.5;
-            yesBtn.style.transform = `scale(${yesScale})`;
-            
-            // Change NO button text
-            phraseIndex = (phraseIndex + 1) % phrases.length;
-            noBtn.innerText = phrases[phraseIndex];
-        });
-
-        yesBtn.addEventListener('click', function() {
-            mainScreen.style.display = 'none';
-            successScreen.style.display = 'flex';
-            startConfetti();
-        });
-
-        // Background falling hearts logic
-        function createFallingHearts() {
-            const heartsContainer = document.getElementById('heartsContainer');
-            const heartSymbols = ['❤️', '💖', '💕', '💗'];
-            
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.classList.add('bg-heart');
-                heart.innerText = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
-                
-                // Random position and size
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.fontSize = Math.random() * 20 + 10 + 'px';
-                heart.style.animationDuration = Math.random() * 3 + 2 + 's';
-                
-                heartsContainer.appendChild(heart);
-
-                // Cleanup
-                setTimeout(() => {
-                    heart.remove();
-                }, 5000);
-            }, 300);
+        function formatDateHeader(date) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
 
-        // Celebrate Confetti when YES is clicked
-        function startConfetti() {
-            setInterval(() => {
-                const confetti = document.createElement('div');
-                confetti.innerHTML = '🥰';
-                confetti.style.position = 'fixed';
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.top = '-50px';
-                confetti.style.fontSize = '30px';
-                confetti.style.zIndex = '100';
-                confetti.style.transition = 'top 3s linear, opacity 3s ease';
-                document.body.appendChild(confetti);
-
-                // Trigger animation
-                setTimeout(() => {
-                    confetti.style.top = '110vh';
-                    confetti.style.opacity = '0';
-                }, 50);
-
-                setTimeout(() => {
-                    confetti.remove();
-                }, 3000);
-            }, 100);
+        function updateWeekLabel() {
+            const start = new Date(currentDate);
+            const end = new Date(currentDate);
+            end.setDate(end.getDate() + 6);
+            
+            const startStr = start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+            const endStr = end.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+            const year = end.getFullYear();
+            
+            document.getElementById('current-week').textContent = `${startStr} - ${endStr}, ${year}`;
         }
 
-        // Initialize background animation
-        createFallingHearts();
+        function renderHeaders() {
+            const headerContainer = document.getElementById('day-headers');
+            headerContainer.innerHTML = '';
+            
+            days.forEach((day, i) => {
+                const date = new Date(currentDate);
+                date.setDate(date.getDate() + i);
+                
+                const div = document.createElement('div');
+                div.className = 'day-header py-4 text-pink-800';
+                div.innerHTML = `
+                    <div class="font-semibold">${day}</div>
+                    <div class="text-xs text-pink-500">${formatDateHeader(date)}</div>
+                `;
+                headerContainer.appendChild(div);
+            });
+        }
 
+        function renderCalendar() {
+            const body = document.getElementById('calendar-body');
+            body.innerHTML = '';
+            
+            // Time labels (0am to 1pm)
+            for (let hour = 0; hour <= 13; hour++) {
+                // Time label
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time-label flex items-center justify-end pr-3 text-xs font-medium';
+                timeDiv.textContent = `${hour === 0 ? '12' : hour % 12}${hour < 12 ? 'am' : 'pm'}`;
+                body.appendChild(timeDiv);
+                
+                // Day cells
+                days.forEach((day) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'calendar-cell';
+                    cell.onclick = () => openEventModalAtTime(day, hour);
+                    
+                    // Add existing events for this day/hour
+                    const dayEvents = events.filter(e => e.day === day && parseInt(e.time.split(':')[0]) === hour);
+                    
+                    dayEvents.forEach(event => {
+                        const evEl = document.createElement('div');
+                        evEl.className = 'event';
+                        evEl.innerHTML = `
+                            <div class="font-medium text-pink-800">${event.student}</div>
+                            <div class="text-xs text-pink-600">${event.subject} • ${event.grade}</div>
+                            <div class="text-[10px] text-pink-400">${event.time}</div>
+                        `;
+                        evEl.onclick = (e) => {
+                            e.stopImmediatePropagation();
+                            editEvent(event.id);
+                        };
+                        cell.appendChild(evEl);
+                    });
+                    
+                    body.appendChild(cell);
+                });
+            }
+        }
+
+        function openEventModalAtTime(day, hour) {
+            document.getElementById('event-day').value = day;
+            document.getElementById('event-time').value = `${hour.toString().padStart(2, '0')}:00`;
+            document.getElementById('modal-title').textContent = 'New Tutoring Session';
+            document.getElementById('event-modal').classList.remove('hidden');
+            document.getElementById('event-student').focus();
+        }
+
+        function addNewEvent() {
+            document.getElementById('event-day').innerHTML = '';
+            days.forEach(day => {
+                const opt = document.createElement('option');
+                opt.value = day;
+                opt.textContent = day;
+                document.getElementById('event-day').appendChild(opt);
+            });
+            
+            document.getElementById('modal-title').textContent = 'New Tutoring Session';
+            document.getElementById('delete-btn').classList.add('hidden');
+            document.getElementById('event-modal').classList.remove('hidden');
+        }
+
+        function editEvent(id) {
+            const event = events.find(e => e.id === id);
+            if (!event) return;
+            
+            document.getElementById('event-day').innerHTML = '';
+            days.forEach(day => {
+                const opt = document.createElement('option');
+                opt.value = day;
+                opt.textContent = day;
+                if (day === event.day) opt.selected = true;
+                document.getElementById('event-day').appendChild(opt);
+            });
+            
+            document.getElementById('event-time').value = event.time;
+            document.getElementById('event-student').value = event.student;
+            document.getElementById('event-subject').value = event.subject;
+            document.getElementById('event-grade').value = event.grade;
+            document.getElementById('modal-title').textContent = 'Edit Session';
+            document.getElementById('delete-btn').classList.remove('hidden');
+            
+            // Store current editing ID
+            window.currentEditingId = id;
+            
+            document.getElementById('event-modal').classList.remove('hidden');
+        }
+
+        function deleteEvent() {
+            if (!window.currentEditingId) return;
+            if (!confirm('Delete this session?')) return;
+            
+            events = events.filter(e => e.id !== window.currentEditingId);
+            delete window.currentEditingId;
+            
+            closeModal();
+            renderCalendar();
+        }
+
+        function saveEvent() {
+            const student = document.getElementById('event-student').value.trim();
+            if (!student) {
+                alert("Please enter a student name");
+                return;
+            }
+            
+            const day = document.getElementById('event-day').value;
+            const time = document.getElementById('event-time').value;
+            const subject = document.getElementById('event-subject').value || "Math";
+            const grade = document.getElementById('event-grade').value;
+            
+            if (window.currentEditingId) {
+                // Update existing
+                const event = events.find(e => e.id === window.currentEditingId);
+                if (event) {
+                    event.day = day;
+                    event.time = time;
+                    event.student = student;
+                    event.subject = subject;
+                    event.grade = grade;
+                }
+                delete window.currentEditingId;
+            } else {
+                // Create new
+                const newEvent = {
+                    id: Date.now(),
+                    day: day,
+                    time: time,
+                    student: student,
+                    subject: subject,
+                    grade: grade || "Grade K7",
+                    duration: 60
+                };
+                events.push(newEvent);
+            }
+            
+            closeModal();
+            renderCalendar();
+        }
+
+        function closeModal() {
+            document.getElementById('event-modal').classList.add('hidden');
+            document.getElementById('event-student').value = '';
+            document.getElementById('event-grade').value = '';
+            document.getElementById('delete-btn').classList.add('hidden');
+            delete window.currentEditingId;
+        }
+
+        function prevWeek() {
+            currentDate.setDate(currentDate.getDate() - 7);
+            updateWeekLabel();
+            renderHeaders();
+            renderCalendar();
+        }
+
+        function nextWeek() {
+            currentDate.setDate(currentDate.getDate() + 7);
+            updateWeekLabel();
+            renderHeaders();
+            renderCalendar();
+        }
+
+        // Initialize
+        function init() {
+            // Populate day select options once
+            const daySelect = document.getElementById('event-day');
+            days.forEach(day => {
+                const opt = document.createElement('option');
+                opt.value = day;
+                opt.textContent = day;
+                daySelect.appendChild(opt);
+            });
+            
+            updateWeekLabel();
+            renderHeaders();
+            renderCalendar();
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Escape") {
+                    const modal = document.getElementById('event-modal');
+                    if (!modal.classList.contains('hidden')) closeModal();
+                }
+            });
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
