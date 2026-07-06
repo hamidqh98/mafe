@@ -6,6 +6,11 @@
     <title>Tutor Schedule</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
@@ -113,15 +118,8 @@
 
         <!-- Calendar -->
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-pink-100">
-            <!-- Day Headers -->
-            <div class="grid grid-cols-7 border-b border-pink-100" id="day-headers">
-                <!-- Populated by JS -->
-            </div>
-            
-            <!-- Calendar Body -->
-            <div class="calendar-grid" id="calendar-body">
-                <!-- Populated by JS -->
-            </div>
+            <div class="grid grid-cols-7 border-b border-pink-100" id="day-headers"></div>
+            <div class="calendar-grid" id="calendar-body"></div>
         </div>
 
         <!-- Legend -->
@@ -137,7 +135,7 @@
                 </div>
             </div>
             <div class="text-right text-pink-400 text-xs">
-                &copy; Teacher Ma.Fe
+                © Teacher Ma.Fe
             </div>
         </div>
     </div>
@@ -153,49 +151,38 @@
             <div class="p-8 space-y-6">
                 <div>
                     <label class="block text-pink-700 text-sm mb-1.5 font-medium">Student Name</label>
-                    <input id="event-student" type="text" 
-                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                    <input id="event-student" type="text" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-pink-700 text-sm mb-1.5 font-medium">Day</label>
-                        <select id="event-day" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
-                            <!-- Populated by JS -->
-                        </select>
+                        <select id="event-day" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950"></select>
                     </div>
                     <div>
                         <label class="block text-pink-700 text-sm mb-1.5 font-medium">Time</label>
-                        <div class="flex gap-2">
-                            <input id="event-time" type="time" 
-                                   class="flex-1 border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
-                        </div>
+                        <input id="event-time" type="time" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-pink-700 text-sm mb-1.5 font-medium">Subject</label>
-                    <input id="event-subject" type="text" value="Math" 
-                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                    <input id="event-subject" type="text" value="Math" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
                 </div>
                 
                 <div>
                     <label class="block text-pink-700 text-sm mb-1.5 font-medium">Grade</label>
-                    <input id="event-grade" type="text" placeholder="e.g. Grade K7" 
-                           class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
+                    <input id="event-grade" type="text" placeholder="e.g. Grade K7" class="w-full border border-pink-200 focus:border-pink-400 rounded-2xl px-5 py-3 outline-none text-pink-950">
                 </div>
                 
                 <div class="flex gap-3 pt-4">
-                    <button id="delete-btn" onclick="deleteEvent()" 
-                            class="hidden px-5 py-4 text-red-500 font-medium border border-red-200 hover:bg-red-50 rounded-2xl transition-colors">
+                    <button id="delete-btn" onclick="deleteEvent()" class="hidden px-5 py-4 text-red-500 font-medium border border-red-200 hover:bg-red-50 rounded-2xl transition-colors">
                         <i class="fas fa-trash"></i>
                     </button>
-                    <button onclick="closeModal()" 
-                            class="flex-1 py-4 text-pink-600 font-medium border border-pink-200 hover:bg-pink-50 rounded-2xl transition-colors">
+                    <button onclick="closeModal()" class="flex-1 py-4 text-pink-600 font-medium border border-pink-200 hover:bg-pink-50 rounded-2xl transition-colors">
                         Cancel
                     </button>
-                    <button onclick="saveEvent()" 
-                            class="flex-1 py-4 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-2xl transition-all">
+                    <button onclick="saveEvent()" class="flex-1 py-4 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-2xl transition-all">
                         Save Session
                     </button>
                 </div>
@@ -204,72 +191,73 @@
     </div>
 
     <script>
-        // Load saved sessions from this browser, or start empty
-        let events = JSON.parse(localStorage.getItem('tutorScheduleEvents') || '[]');
+        // ==================== Firebase Configuration ====================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-        function saveEvents() {
-            localStorage.setItem('tutorScheduleEvents', JSON.stringify(events));
-        }
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const eventsRef = db.collection("tutorSchedule");
 
+        let events = [];
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-        let currentDate = new Date(2026, 6, 6); // July 6, 2026
+        let currentDate = new Date(2026, 6, 6);
 
-        function formatDateHeader(date) {
-            const options = { weekday: 'short', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+        // Real-time listener
+        function loadEvents() {
+            eventsRef.onSnapshot((snapshot) => {
+                events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCalendar();
+            });
         }
 
-        function updateWeekLabel() {
-            const start = new Date(currentDate);
-            const end = new Date(currentDate);
-            end.setDate(end.getDate() + 6);
-            
-            const startStr = start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-            const endStr = end.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-            const year = end.getFullYear();
-            
-            document.getElementById('current-week').textContent = `${startStr} - ${endStr}, ${year}`;
+        function saveEventsToFirestore(eventData) {
+            if (window.currentEditingId) {
+                eventsRef.doc(window.currentEditingId).update(eventData);
+            } else {
+                eventsRef.add(eventData);
+            }
         }
 
         function renderHeaders() {
-            const headerContainer = document.getElementById('day-headers');
-            headerContainer.innerHTML = '';
-            
+            const container = document.getElementById('day-headers');
+            container.innerHTML = '';
             days.forEach((day, i) => {
                 const date = new Date(currentDate);
                 date.setDate(date.getDate() + i);
-                
                 const div = document.createElement('div');
                 div.className = 'day-header py-4 text-pink-800';
                 div.innerHTML = `
                     <div class="font-semibold">${day}</div>
-                    <div class="text-xs text-pink-500">${formatDateHeader(date)}</div>
+                    <div class="text-xs text-pink-500">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                 `;
-                headerContainer.appendChild(div);
+                container.appendChild(div);
             });
         }
 
         function renderCalendar() {
             const body = document.getElementById('calendar-body');
             body.innerHTML = '';
-            
-            // Time labels (0am to 1pm)
+
             for (let hour = 0; hour <= 13; hour++) {
-                // Time label
                 const timeDiv = document.createElement('div');
                 timeDiv.className = 'time-label flex items-center justify-end pr-3 text-xs font-medium';
                 timeDiv.textContent = `${hour === 0 ? '12' : hour % 12}${hour < 12 ? 'am' : 'pm'}`;
                 body.appendChild(timeDiv);
-                
-                // Day cells
-                days.forEach((day) => {
+
+                days.forEach(day => {
                     const cell = document.createElement('div');
                     cell.className = 'calendar-cell';
                     cell.onclick = () => openEventModalAtTime(day, hour);
-                    
-                    // Add existing events for this day/hour
+
                     const dayEvents = events.filter(e => e.day === day && parseInt(e.time.split(':')[0]) === hour);
-                    
+
                     dayEvents.forEach(event => {
                         const evEl = document.createElement('div');
                         evEl.className = 'event';
@@ -284,7 +272,6 @@
                         };
                         cell.appendChild(evEl);
                     });
-                    
                     body.appendChild(cell);
                 });
             }
@@ -294,19 +281,19 @@
             document.getElementById('event-day').value = day;
             document.getElementById('event-time').value = `${hour.toString().padStart(2, '0')}:00`;
             document.getElementById('modal-title').textContent = 'New Tutoring Session';
+            document.getElementById('delete-btn').classList.add('hidden');
             document.getElementById('event-modal').classList.remove('hidden');
-            document.getElementById('event-student').focus();
         }
 
         function addNewEvent() {
-            document.getElementById('event-day').innerHTML = '';
+            const select = document.getElementById('event-day');
+            select.innerHTML = '';
             days.forEach(day => {
                 const opt = document.createElement('option');
                 opt.value = day;
                 opt.textContent = day;
-                document.getElementById('event-day').appendChild(opt);
+                select.appendChild(opt);
             });
-            
             document.getElementById('modal-title').textContent = 'New Tutoring Session';
             document.getElementById('delete-btn').classList.add('hidden');
             document.getElementById('event-modal').classList.remove('hidden');
@@ -315,88 +302,53 @@
         function editEvent(id) {
             const event = events.find(e => e.id === id);
             if (!event) return;
-            
-            document.getElementById('event-day').innerHTML = '';
+
+            const select = document.getElementById('event-day');
+            select.innerHTML = '';
             days.forEach(day => {
                 const opt = document.createElement('option');
                 opt.value = day;
                 opt.textContent = day;
                 if (day === event.day) opt.selected = true;
-                document.getElementById('event-day').appendChild(opt);
+                select.appendChild(opt);
             });
-            
+
             document.getElementById('event-time').value = event.time;
             document.getElementById('event-student').value = event.student;
             document.getElementById('event-subject').value = event.subject;
             document.getElementById('event-grade').value = event.grade;
             document.getElementById('modal-title').textContent = 'Edit Session';
             document.getElementById('delete-btn').classList.remove('hidden');
-            
-            // Store current editing ID
             window.currentEditingId = id;
-            
             document.getElementById('event-modal').classList.remove('hidden');
         }
 
-        function deleteEvent() {
-            if (!window.currentEditingId) return;
-            if (!confirm('Delete this session?')) return;
-            
-            events = events.filter(e => e.id !== window.currentEditingId);
-            delete window.currentEditingId;
-            
-            saveEvents();
+        async function saveEvent() {
+            const student = document.getElementById('event-student').value.trim();
+            if (!student) return alert("Please enter student name");
+
+            const eventData = {
+                day: document.getElementById('event-day').value,
+                time: document.getElementById('event-time').value,
+                student: student,
+                subject: document.getElementById('event-subject').value || "Math",
+                grade: document.getElementById('event-grade').value || "Grade K7"
+            };
+
+            await saveEventsToFirestore(eventData);
             closeModal();
-            renderCalendar();
         }
 
-        function saveEvent() {
-            const student = document.getElementById('event-student').value.trim();
-            if (!student) {
-                alert("Please enter a student name");
-                return;
-            }
-            
-            const day = document.getElementById('event-day').value;
-            const time = document.getElementById('event-time').value;
-            const subject = document.getElementById('event-subject').value || "Math";
-            const grade = document.getElementById('event-grade').value;
-            
-            if (window.currentEditingId) {
-                // Update existing
-                const event = events.find(e => e.id === window.currentEditingId);
-                if (event) {
-                    event.day = day;
-                    event.time = time;
-                    event.student = student;
-                    event.subject = subject;
-                    event.grade = grade;
-                }
-                delete window.currentEditingId;
-            } else {
-                // Create new
-                const newEvent = {
-                    id: Date.now(),
-                    day: day,
-                    time: time,
-                    student: student,
-                    subject: subject,
-                    grade: grade || "Grade K7",
-                    duration: 60
-                };
-                events.push(newEvent);
-            }
-            
-            saveEvents();
+        async function deleteEvent() {
+            if (!window.currentEditingId || !confirm('Delete this session?')) return;
+            await eventsRef.doc(window.currentEditingId).delete();
             closeModal();
-            renderCalendar();
         }
 
         function closeModal() {
             document.getElementById('event-modal').classList.add('hidden');
             document.getElementById('event-student').value = '';
             document.getElementById('event-grade').value = '';
-            document.getElementById('delete-btn').classList.add('hidden');
             delete window.currentEditingId;
         }
 
@@ -414,31 +366,21 @@
             renderCalendar();
         }
 
-        // Initialize
-        function init() {
-            // Populate day select options once
-            const daySelect = document.getElementById('event-day');
-            days.forEach(day => {
-                const opt = document.createElement('option');
-                opt.value = day;
-                opt.textContent = day;
-                daySelect.appendChild(opt);
-            });
-            
-            updateWeekLabel();
-            renderHeaders();
-            renderCalendar();
-            
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.key === "Escape") {
-                    const modal = document.getElementById('event-modal');
-                    if (!modal.classList.contains('hidden')) closeModal();
-                }
-            });
+        function updateWeekLabel() {
+            const start = new Date(currentDate);
+            const end = new Date(currentDate);
+            end.setDate(end.getDate() + 6);
+            const startStr = start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+            const endStr = end.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+            document.getElementById('current-week').textContent = `${startStr} - ${endStr}, ${end.getFullYear()}`;
         }
 
-        window.onload = init;
+        // Initialize
+        window.onload = () => {
+            updateWeekLabel();
+            renderHeaders();
+            loadEvents();
+        };
     </script>
 </body>
 </html>
