@@ -193,12 +193,12 @@
     <script>
         // ==================== Firebase Configuration ====================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY_HERE",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAoaLsLkyfdE9u6jh4If2oho1yCnJLB6Js",
+            authDomain: "tutor-schedule-90593.firebaseapp.com",
+            projectId: "tutor-schedule-90593",
+            storageBucket: "tutor-schedule-90593.firebasestorage.app",
+            messagingSenderId: "63045031270",
+            appId: "1:63045031270:web:47cf28432bc839e7f964a7"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -215,14 +215,6 @@
                 events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCalendar();
             });
-        }
-
-        function saveEventsToFirestore(eventData) {
-            if (window.currentEditingId) {
-                eventsRef.doc(window.currentEditingId).update(eventData);
-            } else {
-                eventsRef.add(eventData);
-            }
         }
 
         function renderHeaders() {
@@ -256,19 +248,19 @@
                     cell.className = 'calendar-cell';
                     cell.onclick = () => openEventModalAtTime(day, hour);
 
-                    const dayEvents = events.filter(e => e.day === day && parseInt(e.time.split(':')[0]) === hour);
+                    const dayEvents = events.filter(e => e.day === day && parseInt(e.time ? e.time.split(':')[0] : 0) === hour);
 
                     dayEvents.forEach(event => {
                         const evEl = document.createElement('div');
                         evEl.className = 'event';
                         evEl.innerHTML = `
                             <div class="font-medium text-pink-800">${event.student}</div>
-                            <div class="text-xs text-pink-600">${event.subject} • ${event.grade}</div>
+                            <div class="text-xs text-pink-600">${event.subject || 'Math'} • ${event.grade || ''}</div>
                             <div class="text-[10px] text-pink-400">${event.time}</div>
                         `;
-                        evEl.onclick = (e) => {
-                            e.stopImmediatePropagation();
-                            editEvent(event.id);
+                        evEl.onclick = (e) => { 
+                            e.stopImmediatePropagation(); 
+                            editEvent(event.id); 
                         };
                         cell.appendChild(evEl);
                     });
@@ -302,7 +294,7 @@
         function editEvent(id) {
             const event = events.find(e => e.id === id);
             if (!event) return;
-
+            
             const select = document.getElementById('event-day');
             select.innerHTML = '';
             days.forEach(day => {
@@ -313,10 +305,10 @@
                 select.appendChild(opt);
             });
 
-            document.getElementById('event-time').value = event.time;
-            document.getElementById('event-student').value = event.student;
-            document.getElementById('event-subject').value = event.subject;
-            document.getElementById('event-grade').value = event.grade;
+            document.getElementById('event-time').value = event.time || '';
+            document.getElementById('event-student').value = event.student || '';
+            document.getElementById('event-subject').value = event.subject || 'Math';
+            document.getElementById('event-grade').value = event.grade || '';
             document.getElementById('modal-title').textContent = 'Edit Session';
             document.getElementById('delete-btn').classList.remove('hidden');
             window.currentEditingId = id;
@@ -332,10 +324,14 @@
                 time: document.getElementById('event-time').value,
                 student: student,
                 subject: document.getElementById('event-subject').value || "Math",
-                grade: document.getElementById('event-grade').value || "Grade K7"
+                grade: document.getElementById('event-grade').value || ""
             };
 
-            await saveEventsToFirestore(eventData);
+            if (window.currentEditingId) {
+                await eventsRef.doc(window.currentEditingId).update(eventData);
+            } else {
+                await eventsRef.add(eventData);
+            }
             closeModal();
         }
 
